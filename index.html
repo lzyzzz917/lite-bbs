@@ -1,23 +1,48 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>專業輕量化電子佈告欄 (SPA)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f4f6f9; }
-        .post-card { transition: transform 0.2s, box-shadow 0.2s; }
-        .post-card:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
-        .app-view { display: none; } 
-        .app-view.active { display: block; } 
+        body {
+            background-color: #f4f6f9;
+        }
+
+        .post-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .post-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-view {
+            display: none;
+        }
+
+        .app-view.active {
+            display: block;
+        }
+
         #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.85); z-index: 1050;
-            display: flex; justify-content: center; align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            z-index: 1050;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
+
 <body>
 
     <div id="loading-overlay" class="d-none">
@@ -35,11 +60,13 @@
                         <form id="form-login">
                             <div class="mb-3">
                                 <label class="form-label">帳號</label>
-                                <input type="text" class="form-control" id="login-acc" required placeholder="輸入 user 或 admin">
+                                <input type="text" class="form-control" id="login-acc" required
+                                    placeholder="輸入 user 或 admin">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">密碼</label>
-                                <input type="password" class="form-control" id="login-pass" required placeholder="輸入 1234">
+                                <input type="password" class="form-control" id="login-pass" required
+                                    placeholder="輸入 1234">
                             </div>
                             <button type="submit" class="btn btn-primary w-100 mb-3">登入</button>
                             <div class="text-center">
@@ -91,7 +118,8 @@
                     </form>
                     <div class="d-flex align-items-center gap-3">
                         <span class="text-light" id="user-info-badge"></span>
-                        <button class="btn btn-primary btn-sm" id="btn-new-post" data-bs-toggle="modal" data-bs-target="#postModal">發布文章</button>
+                        <button class="btn btn-primary btn-sm" id="btn-new-post" data-bs-toggle="modal"
+                            data-bs-target="#postModal">發布文章</button>
                         <button class="btn btn-outline-light btn-sm" id="btn-logout">登出</button>
                     </div>
                 </div>
@@ -100,7 +128,7 @@
 
         <div class="container">
             <div class="row" id="post-list">
-                </div>
+            </div>
         </div>
     </div>
 
@@ -138,9 +166,9 @@
     <script>
 
         const CONFIG = {
-            token: 'YOUR_GITHUB_TOKEN',
-            owner: 'YOUR_GITHUB_USERNAME',
-            repo: 'YOUR_REPO_NAME',
+            token: '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',
+            owner: 'lzyzzz917',
+            repo: 'lite-bbs',
             path: 'db.json'
         };
 
@@ -148,7 +176,7 @@
             posts: [],
             currentSha: '',
             currentUser: null,
-            role: 'guest' 
+            role: 'guest'
         };
         const Auth = {
 
@@ -168,7 +196,7 @@
             logout() {
                 State.currentUser = null;
                 State.role = 'guest';
-                State.posts = []; 
+                State.posts = [];
             }
         };
 
@@ -186,7 +214,7 @@
 
         const GitHubAPI = {
             getBaseUrl: () => `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.path}`,
-            
+
             async fetch() {
                 try {
                     $('#loading-overlay').removeClass('d-none');
@@ -213,7 +241,7 @@
                     const res = await $.ajax({
                         url: this.getBaseUrl(),
                         method: 'PUT',
-                        headers: { 
+                        headers: {
                             "Authorization": `Bearer ${CONFIG.token}`,
                             "Content-Type": "application/json"
                         },
@@ -241,7 +269,7 @@
 
                 const roleName = State.role === 'admin' ? '管理員' : '使用者';
                 $('#user-info-badge').text(`你好，${State.currentUser} (${roleName})`);
-                
+
 
                 GitHubAPI.fetch();
             },
@@ -265,7 +293,7 @@
                         </div>
                     ` : '';
                     const dateStr = new Date(post.timestamp).toLocaleString('zh-TW');
-                    
+
 
                     const safeTitle = $('<div>').text(post.title).html();
                     const safeAuthor = $('<div>').text(post.author).html();
@@ -288,7 +316,7 @@
         };
 
         $(document).ready(() => {
-            
+
 
             $('#link-to-register').click((e) => { e.preventDefault(); ViewManager.show('view-register'); });
             $('#link-to-login').click((e) => { e.preventDefault(); ViewManager.show('view-login'); });
@@ -297,12 +325,12 @@
                 e.preventDefault();
                 const acc = $('#login-acc').val().trim();
                 const pass = $('#login-pass').val().trim();
-                
+
                 if (Auth.login(acc, pass)) {
                     $('#login-acc').val('');
                     $('#login-pass').val('');
                     ViewManager.show('view-bbs');
-                    BBS.init(); 
+                    BBS.init();
                 } else {
                     alert('帳號或密碼錯誤！');
                 }
@@ -319,9 +347,9 @@
                 ViewManager.show('view-login');
             });
 
-            $('#search-input').on('keyup', function() {
+            $('#search-input').on('keyup', function () {
                 const val = $(this).val().toLowerCase();
-                $(".post-item").filter(function() {
+                $(".post-item").filter(function () {
                     const textToSearch = $(this).find('.post-title, .post-content').text().toLowerCase();
                     $(this).toggle(textToSearch.indexOf(val) > -1);
                 });
@@ -343,22 +371,22 @@
 
                 let updatedPosts = [...State.posts];
 
-                if (id) { 
+                if (id) {
                     const index = updatedPosts.findIndex(p => p.id === id);
                     if (index !== -1) updatedPosts[index] = { ...updatedPosts[index], title, content };
-                } else { 
+                } else {
                     updatedPosts.push({
                         id: Date.now().toString(),
                         title,
                         content,
-                        author: State.currentUser, 
+                        author: State.currentUser,
                         timestamp: Date.now()
                     });
                 }
                 GitHubAPI.update(updatedPosts);
             });
 
-            $('#post-list').on('click', '.btn-edit', function() {
+            $('#post-list').on('click', '.btn-edit', function () {
                 const id = String($(this).data('id'));
                 const post = State.posts.find(p => p.id === id);
                 if (post) {
@@ -370,7 +398,7 @@
                 }
             });
 
-            $('#post-list').on('click', '.btn-delete', function() {
+            $('#post-list').on('click', '.btn-delete', function () {
                 if (confirm('確定要刪除這篇文章嗎？此動作無法復原。')) {
                     const id = String($(this).data('id'));
                     const updatedPosts = State.posts.filter(p => p.id !== id);
@@ -381,4 +409,5 @@
 
     </script>
 </body>
+
 </html>
