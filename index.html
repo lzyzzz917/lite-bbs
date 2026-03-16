@@ -221,19 +221,24 @@
                     const res = await $.ajax({
                         url: `${this.getBaseUrl()}?t=${new Date().getTime()}`,
                         method: 'GET',
-                        headers: { "Authorization": `Bearer ${CONFIG.token}` }
+                        // --- 關鍵修改處 ---
+                        headers: {
+                            "Authorization": "token " + CONFIG.token,
+                            "Accept": "application/vnd.github.v3+json"
+                        }
                     });
                     State.currentSha = res.sha;
                     const decodedStr = Base64Helper.decode(res.content);
                     State.posts = JSON.parse(decodedStr).posts || [];
                     BBS.render();
                 } catch (error) {
-                    alert('資料讀取失敗，請檢查 GitHub 設定。');
-                    console.error(error);
+                    // 如果還是 401，這裡會顯示詳細訊息
+                    console.error("API 請求失敗，伺服器回應:", error.responseText);
+                    alert('資料讀取失敗，Token 可能無效。');
                 } finally {
                     $('#loading-overlay').addClass('d-none');
                 }
-            },
+            }
 
             async update(newPosts) {
                 try {
