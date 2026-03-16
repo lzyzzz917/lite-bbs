@@ -166,7 +166,8 @@
     <script>
 
         const CONFIG = {
-            token: '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',
+            // 已更新為你的新 Token
+            token: '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',
             owner: 'lzyzzz917',
             repo: 'lite-bbs',
             path: 'db.json'
@@ -178,8 +179,8 @@
             currentUser: null,
             role: 'guest'
         };
-        const Auth = {
 
+        const Auth = {
             mockDB: {
                 'user': { pass: '1234', role: 'user', name: '一般使用者' },
                 'admin': { pass: '1234', role: 'admin', name: '系統管理員' }
@@ -215,30 +216,33 @@
         const GitHubAPI = {
             getBaseUrl: () => `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.path}`,
 
+            // 統一 Header 設定函數
+            getHeaders() {
+                return {
+                    "Authorization": "token " + CONFIG.token,
+                    "Accept": "application/vnd.github.v3+json",
+                    "Content-Type": "application/json"
+                };
+            },
+
             async fetch() {
                 try {
                     $('#loading-overlay').removeClass('d-none');
                     const res = await $.ajax({
                         url: `${this.getBaseUrl()}?t=${new Date().getTime()}`,
                         method: 'GET',
-                        // --- 關鍵修改處 ---
-                        headers: {
-                            "Authorization": "token " + CONFIG.token,
-                            "Accept": "application/vnd.github.v3+json"
-                        }
+                        headers: this.getHeaders()
                     });
                     State.currentSha = res.sha;
-                    const decodedStr = Base64Helper.decode(res.content);
-                    State.posts = JSON.parse(decodedStr).posts || [];
+                    State.posts = JSON.parse(Base64Helper.decode(res.content)).posts || [];
                     BBS.render();
                 } catch (error) {
-                    // 如果還是 401，這裡會顯示詳細訊息
-                    console.error("API 請求失敗，伺服器回應:", error.responseText);
-                    alert('資料讀取失敗，Token 可能無效。');
+                    console.error("讀取資料失敗:", error);
+                    alert('資料讀取失敗，請檢查 Token 是否正確且具備 repo 權限。');
                 } finally {
                     $('#loading-overlay').addClass('d-none');
                 }
-            }
+            },
 
             async update(newPosts) {
                 try {
@@ -246,23 +250,22 @@
                     const res = await $.ajax({
                         url: this.getBaseUrl(),
                         method: 'PUT',
-                        headers: {
-                            "Authorization": `Bearer ${CONFIG.token}`,
-                            "Content-Type": "application/json"
-                        },
+                        headers: this.getHeaders(),
                         data: JSON.stringify({
                             message: `Update by ${State.currentUser}`,
                             content: Base64Helper.encode(JSON.stringify({ posts: newPosts }, null, 2)),
                             sha: State.currentSha
                         })
                     });
+                    // 更新成功後，更新 SHA 以供下次存取使用
                     State.currentSha = res.content.sha;
                     State.posts = newPosts;
                     BBS.render();
-                    bootstrap.Modal.getInstance(document.getElementById('postModal')).hide();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('postModal'));
+                    if (modal) modal.hide();
                 } catch (error) {
-                    alert('儲存失敗！');
-                    console.error(error);
+                    console.error("更新資料失敗:", error);
+                    alert('儲存失敗！請確認 Token 是否過期或權限不足。');
                 } finally {
                     $('#loading-overlay').addClass('d-none');
                 }
